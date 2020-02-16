@@ -6,7 +6,7 @@ if __name__ == "__main__":
     mainGrid = Grid(9,3,3)
     for i in range(9):
         for j in range(9):
-            mainGrid.writeIn(diab3Numbers[i][j],i,j)
+            mainGrid.writeIn(hardNumbers[i][j],i,j)
     
     mainGrid.printOut()
 
