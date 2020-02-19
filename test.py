@@ -6,7 +6,7 @@ if __name__ == "__main__":
     mainGrid = Grid(9,3,3)
     for i in range(9):
         for j in range(9):
-            mainGrid.writeIn(hardNumbers[i][j],i,j)
+            mainGrid.writeIn(exp2Numbers[i][j],i,j)
     
     mainGrid.printOut()
 
@@ -22,4 +22,4 @@ if __name__ == "__main__":
     elif mainGrid.getStatus() == Status.IMPOSSIBLE:
         print("This is impossible")
     else:
-        print("Timed out")
+        print("Timed out,",mainGrid._nSolved)
