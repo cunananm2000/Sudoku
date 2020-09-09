@@ -34,6 +34,20 @@ class Grid(object):
             self._solved.append(solvedRow)
             self._possible.append(posRow)
 
+    def load(self,sampleGrid):
+        if len(sampleGrid) != self._size:
+            return False
+        for row in sampleGrid:
+            if len(row) != self._size:
+                return False
+        
+        # nSolved = 0
+        for i in range(9):
+            for j in range(9):
+                n = sampleGrid[i][j]
+                if (n != 0):
+                    self.addToQueue(n,i,j)
+
     def allNumbers(self):
         numbers = []
         for i in range(self._size):
@@ -292,20 +306,36 @@ class Grid(object):
             # print("Done all logical steps, moving onto guessing")
             if (self._depth < 2):
                 self.solveByGuess()
+
+    def getGrid(self):
+        ret = []
+        for i in range(self._size):
+            row = []
+            for j in range(self._size):
+                if self._solved[i][j]:
+                    row.append(self._possible[i][j][0])
+                else:
+                    row.append(0)
+
+            ret.append(row)
+        return ret
         
 
 if __name__ == "__main__":
     mainGrid = Grid(9,3,3)
     # mainGrid.writeIn(1,5,5)
-    nSolved = 0
-    for i in range(9):
-        for j in range(9):
-            n = specNumbers[i][j]
-            if (n != 0):
-                mainGrid.addToQueue(n,i,j)
-                nSolved += 1
+    # nSolved = 0
+    # for i in range(9):
+    #     for j in range(9):
+    #         n = exp2Numbers[i][j]
+    #         if (n != 0):
+    #             mainGrid.addToQueue(n,i,j)
+    #             nSolved += 1
+    mainGrid.load(ctcNumbers)
     start = time.process_time()
     mainGrid.solve()
-    print("TIME:",time.process_time() - start)
+    print("TIME:",time.process_time() - start, mainGrid.getStatus())
     mainGrid.printOut()
-    print("nSolved:",nSolved,'->',mainGrid._nSolved)
+    grid = mainGrid.getGrid()
+    print(grid)
+    # print("nSolved:",nSolved,'->',mainGrid._nSolved)
