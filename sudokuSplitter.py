@@ -8,29 +8,35 @@ import pytesseract
 cellSize = 56
 border = 3
 
-def cleanUp(img):
-    rx = 500.0/img.shape[0]
-    ry = 500.0/img.shape[1]
+def cleanUp(ogimg):
+    rx = 500.0/ogimg.shape[0]
+    ry = 500.0/ogimg.shape[1]
     r = max([rx,ry])
 
 
-    img = cv2.resize(img,(0,0),fx=r,fy=r)
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    ogimg = cv2.resize(ogimg,(0,0),fx=r,fy=r)
+    img = cv2.cvtColor(ogimg, cv2.COLOR_BGR2GRAY)
     img = cv2.addWeighted(img, 1.5, np.zeros(img.shape, img.dtype), 0, 0)
 
     img = cv2.adaptiveThreshold(img,255,cv2.ADAPTIVE_THRESH_MEAN_C,
             cv2.THRESH_BINARY,25,25)
+    blur = cv2.GaussianBlur(img,(3,3),3)
     
-    edged = cv2.Canny(img,60,180)
+    edged = cv2.Canny(blur,100,180)
+
+    # cv2.imshow("img",img)
+    # cv2.imshow("edged",edged)
+    # cv2.waitKey(0)
     
     im2, contours, hierarchy = cv2.findContours(edged, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
-
+    
     if len(contours) == 0:
         print("No contours found")
         return None
 
     cnt = None
     maxArea = 0
+    # print(len(contours))
     for c in contours:
         area = cv2.contourArea(c)
         if area > maxArea:
@@ -42,6 +48,15 @@ def cleanUp(img):
         print("No biggest contour")
         return None
 
+    # temp = img
+
+    # contours = sorted(contours,key= lambda c: -cv2.contourArea(c))
+    # cv2.drawContours(ogimg, contours[0:1000], -1, (0, 255, 0), 1) 
+    # cv2.drawContours(ogimg, [cnt], -1, (0, 255, 0), 1) 
+    # cv2.imshow("wow",ogimg)
+    # cv2.waitKey(0)
+
+
     epsilon = 0.01*cv2.arcLength(cnt,True)
     approx = cv2.approxPolyDP(cnt,epsilon,True)
 
@@ -50,7 +65,10 @@ def cleanUp(img):
         print("Wrong shape of grid")
         return
     approx = approx.reshape(4,2)
+    approx = rearrangeCorners(approx,ogimg.shape[0],ogimg.shape[1])
+    # print(approx)
     approx = np.array(approx.tolist(),np.float32)
+    
 
     gridSize = cellSize*9
     final = np.array([
@@ -79,6 +97,17 @@ def saveCells(cells):
         for j in range(len(cells[i])):
             if cells[i][j] is not None:
                 cv2.imwrite("digits/grid_"+str(i)+str(j)+".png",cells[i][j])
+
+def distSquared(p1,p2):
+    return (p1[0]-p2[0])**2 + (p1[1]-p2[1])**2
+
+def rearrangeCorners(corners,width,height):
+    corners = sorted(corners,key=lambda p: distSquared(p,[0,0]))
+    tl = corners[0]
+    corners = sorted(corners[1:],key=lambda p: distSquared(p,[0,height]))
+    bl = corners[0]
+    corners = sorted(corners[1:],key=lambda p: distSquared(p,[width,height]))
+    return np.array([tl,bl]+corners)
 
 def removeBlackBorder(img,tol=0):
     mask = img>tol
@@ -216,7 +245,7 @@ def getDigits(cells):
         return None
 
     text = text[0].replace(" ","")
-    if len(text) != len(cellsWithDigits):
+    if len(text) != len(cellsWithDigits) or not text.isdigit():
         return None
 
     grid = []
@@ -225,7 +254,7 @@ def getDigits(cells):
         row = []
         for j in range(0, len(cells[i])):
             if cells[i][j] is not None:
-                row.append(text[c])
+                row.append(int(text[c]))
                 c += 1
             else:
                 row.append(0)
@@ -234,25 +263,21 @@ def getDigits(cells):
     return grid
 
 
-def main():
-    if len(sys.argv) < 2:
-        print("Give sudoku pic")
-        return
-    
-    img = cv2.imread(sys.argv[1])
+def extractGrid(img):
     if img is None:
         print("No such image found")
-        return
+        return None
 
     clean = cleanUp(img)
     if clean is None:
         print("Failed")
-        return
+        return None
 
     # cv2.imshow("clean",clean)
     # cv2.waitKey(0)
 
     cells = splitUp(clean)
+
     cells = highlightCells(cells)
 
     # printLocations(cells)
@@ -270,15 +295,16 @@ def main():
     # cells = readDigits(cells)
     if grid is None:
         print("Unable to read numbers")
-        return
+        return None
     
-    printCells(grid)
+    
+    # printCells(grid)
+
+    return grid
 
 
     # print("Done")
-    # cv2.imshow("Clean",clean)
-    # cv2.waitKey(0)
-    # cells = splitUp(clean)
+    # cv2.imshow("Clean",cleas
 
 if __name__ == "__main__":
-    main()
+    extractGrid(sys.argv[1])
