@@ -8,7 +8,7 @@ import pytesseract
 cellSize = 56
 border = 3
 
-def cleanUp(ogimg):
+def focusGrid(ogimg):
     rx = 500.0/ogimg.shape[0]
     ry = 500.0/ogimg.shape[1]
     r = max([rx,ry])
@@ -268,13 +268,13 @@ def extractGrid(img):
         print("No such image found")
         return None
 
-    clean = cleanUp(img)
+    clean = focusGrid(img)
     if clean is None:
         print("Failed")
         return None
 
-    # cv2.imshow("clean",clean)
-    # cv2.waitKey(0)
+    cv2.imshow("clean",clean)
+    cv2.waitKey(0)
 
     cells = splitUp(clean)
 
@@ -307,4 +307,7 @@ def extractGrid(img):
     # cv2.imshow("Clean",cleas
 
 if __name__ == "__main__":
-    extractGrid(sys.argv[1])
+    grid = focusGrid(cv2.imread(sys.argv[1]))
+    cv2.imshow("Grid",grid)
+    cv2.waitKey(0)
+    # extractGrid(sys.argv[1])

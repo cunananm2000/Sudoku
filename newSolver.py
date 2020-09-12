@@ -42,8 +42,8 @@ class Grid(object):
                 return False
         
         # nSolved = 0
-        for i in range(9):
-            for j in range(9):
+        for i in range(self._size):
+            for j in range(self._size):
                 n = sampleGrid[i][j]
                 if (n != 0):
                     self.addToQueue(n,i,j)
@@ -103,7 +103,7 @@ class Grid(object):
         self._possible[x][y] = [n]
         self._nSolved += 1
 
-        # print(x,y,":",n)
+        print(self._depth*"-",x,y,":",n)
 
         if self._nSolved == self._size**2:
             self._status = Status.SOLVED
@@ -161,6 +161,8 @@ class Grid(object):
         self._queue.append([n,x,y])
 
     def solveByElimination(self):
+        if (self._status != Status.IN_PROGRESS):
+            return False
         # Clear each row
         # Clear each column
         # Clear each block
@@ -243,7 +245,7 @@ class Grid(object):
         return newGrid
 
     def getNatXY(self,x,y):
-        if (self._solved):
+        if (self._solved[x][y]):
             assert len(self._possible[x][y]) == 1
             return self._possible[x][y][0]
         else:
@@ -276,10 +278,11 @@ class Grid(object):
                         # print(k,len(self._possible[i][j]))
                         tempGrid = self.clone()
                         tempGrid.writeIn(self._possible[i][j][k],i,j)
-                        # print("depth:",self._depth,'  '*self._depth,"Guessing",self._possible[i][j][k],"at",i,j)
+                        print("depth:",self._depth,'  '*self._depth,"Guessing",self._possible[i][j][k],"at",i,j)
                         tempGrid.solve()
                         if (tempGrid.getStatus() == Status.SOLVED):
-                            nWorks == 1
+                            print("Hey this one worked")
+                            nWorks = 1
                             self.adapt(tempGrid)
                             return True
                         # elif (tempGrid.getStatus() == Status.IN_PROGRESS):
@@ -290,6 +293,7 @@ class Grid(object):
                                 break
                         k += 1
                     if (nWorks == 1):
+                        print("Found that",works,"Works")
                         changed = True
                         self.writeIn(works,i,j)
                         # print("Depth:",self._depth,'  '*self._depth,"GOOD:",works,"at",i,j)
@@ -301,9 +305,10 @@ class Grid(object):
     def solve(self):
         progress = True
         while progress:
+            print("going")
             progress = (self.doQueue() or self.solveByElimination())
         if (self._status == Status.IN_PROGRESS):
-            # print("Done all logical steps, moving onto guessing")
+            print("Done all logical steps, moving onto guessing")
             if (self._depth < 2):
                 self.solveByGuess()
 
@@ -331,7 +336,7 @@ if __name__ == "__main__":
     #         if (n != 0):
     #             mainGrid.addToQueue(n,i,j)
     #             nSolved += 1
-    mainGrid.load(ctcNumbers)
+    mainGrid.load(evilNumbers)
     start = time.process_time()
     mainGrid.solve()
     print("TIME:",time.process_time() - start, mainGrid.getStatus())
