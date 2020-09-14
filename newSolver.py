@@ -103,7 +103,7 @@ class Grid(object):
         self._possible[x][y] = [n]
         self._nSolved += 1
 
-        print(self._depth*"-",x,y,":",n)
+        # print(self._depth*"-",x,y,":",n)
 
         if self._nSolved == self._size**2:
             self._status = Status.SOLVED
@@ -278,10 +278,10 @@ class Grid(object):
                         # print(k,len(self._possible[i][j]))
                         tempGrid = self.clone()
                         tempGrid.writeIn(self._possible[i][j][k],i,j)
-                        print("depth:",self._depth,'  '*self._depth,"Guessing",self._possible[i][j][k],"at",i,j)
+                        # print("depth:",self._depth,'  '*self._depth,"Guessing",self._possible[i][j][k],"at",i,j)
                         tempGrid.solve()
                         if (tempGrid.getStatus() == Status.SOLVED):
-                            print("Hey this one worked")
+                            # print("Hey this one worked")
                             nWorks = 1
                             self.adapt(tempGrid)
                             return True
@@ -293,7 +293,7 @@ class Grid(object):
                                 break
                         k += 1
                     if (nWorks == 1):
-                        print("Found that",works,"Works")
+                        # print("Found that",works,"Works")
                         changed = True
                         self.writeIn(works,i,j)
                         # print("Depth:",self._depth,'  '*self._depth,"GOOD:",works,"at",i,j)
@@ -305,7 +305,7 @@ class Grid(object):
     def solve(self):
         progress = True
         while progress:
-            print("going")
+            # print("going")
             progress = (self.doQueue() or self.solveByElimination())
         if (self._status == Status.IN_PROGRESS):
             print("Done all logical steps, moving onto guessing")

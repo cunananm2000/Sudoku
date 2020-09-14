@@ -4,6 +4,7 @@ const Status = {
     IMPOSSIBLE: 'impossible'
 }
 
+
 class Grid {
     constructor(size,secW,secH,depth=0){
         this.size = size
@@ -56,24 +57,7 @@ class Grid {
         return [...Array(this.size).keys()].map(x => x + 1)
     }
 
-    printOut(showPossible=false){
-        let display = []
-        for (let i = 0; i < this.size; i++){
-            let tempRow = []
-            for (let j = 0; j < this.size; j++){
-                if (this.solved[i][j]){
-                    tempRow.push(this.possible[i][j][0])
-                } else {
-                    tempRow.push("?")
-                }
-            }
-            display.push(tempRow)
-        }
-
-        console.log("TODO")
-    }
-
-    writeIn(n,x,y){
+    async writeIn(n,x,y){
         if (this.solved[x][y]){
             if (this.possible[x][y][0] != n){
                 this.status = Status.IMPOSSIBLE
@@ -88,7 +72,7 @@ class Grid {
         this.possible[x][y] = [n]
         this.nSolved++
 
-        console.log([this.depth,x,y,n])
+        // console.log([this.depth,x,y,n])
 
         if (this.nSolved == this.size*this.size){
             this.status = Status.SOLVED
@@ -162,14 +146,14 @@ class Grid {
         this.queue.push([n,x,y])
     }
 
-    solveByElimination() {
+    async solveByElimination() {
         let currentSolved = this.nSolved
         for (let i = 0; i < this.size; i++){
             let row = []
             for (let j = 0; j < this.size; j++){
                 row.push([i,j])
             }
-            this.solveGroup(row)
+            await this.solveGroup(row)
         }
 
         for (let j = 0; j < this.size; j++){
@@ -177,7 +161,7 @@ class Grid {
             for (let i = 0; i < this.size; i++){
                 col.push([i,j])
             }
-            this.solveGroup(col)
+            await this.solveGroup(col)
         }
 
         for (let x = 0; x < this.nSecsH; x++){
@@ -190,14 +174,14 @@ class Grid {
                         sec.push([tlX+i,tlY+j])
                     }
                 }
-                this.solveGroup(sec)
+                await this.solveGroup(sec)
             }
         }
 
         return (this.nSolved > currentSolved)
     }
 
-    solveGroup(group){
+    async solveGroup(group){
         let numbers = this.allNumbers()
         let emptys = []
         for (let pos of group){
@@ -232,15 +216,15 @@ class Grid {
                 }
             }
             if (found){
-                this.writeIn(n,chosen[0],chosen[1])
-                this.doQueue()
+                await this.writeIn(n,chosen[0],chosen[1])
+                await this.doQueue()
             }
         }
 
         return true
     }
 
-    doQueue() {
+    async doQueue() {
         let currentSolved = this.nSolved
         while (this.queue.length != 0){
             let curr = this.queue[0]
@@ -283,7 +267,7 @@ class Grid {
         this.status = otherGrid.getStatus()
     }
 
-    solveByGuess(){
+    async solveByGuess(){
         if (this.status != Status.IN_PROGRESS){
             return false
         }
@@ -294,19 +278,21 @@ class Grid {
                 if (!this.solved[i][j] && this.possible[i][j].length <= 4){
                     let works = -1
                     let nWorks = 0
+                    // let attempts = []
                     for (let n of this.possible[i][j]) {
                         let tempGrid = this.clone()
                         tempGrid.writeIn(n,i,j)
-                        console.log(["Guessing",this.depth,n,i,j])
-                        let status = tempGrid.solve()
+                        // attempts.push(tempGrid)
+                        // console.log(["Guessing",this.depth,n,i,j])
+                        let status = await tempGrid.solve()
                         // console.log(JSON.parse(JSON.stringify(status)));
-                        // let status = tempGrid.getStatus()
-                        if (status == 'solved'){
+                        if (status === Status.SOLVED) {
+                            // console.log("FOUND ONE THAT WORKS")
                             nWorks = 1
                             this.adapt(tempGrid)
+                            this.status = Status.SOLVED
                             return true
-                        }
-                        if (tempGrid.solve() != Status.IMPOSSIBLE){
+                        } else if (status != Status.IMPOSSIBLE){
                             nWorks++
                             works = n
                             if (nWorks >= 2){
@@ -320,7 +306,7 @@ class Grid {
                         this.writeIn(works,i,j)
                         let progress = true
                         while (progress){
-                            progress = this.doQueue() || this.solveByElimination()
+                            progress = await this.doQueue() || await this.solveByElimination()
                         }
                     }
                 }
@@ -330,17 +316,17 @@ class Grid {
         return changed
     }
 
-    solve() {
+    async solve() {
         let progress = true
         while (progress){
-            console.log("going")
-            progress = this.doQueue() || this.solveByElimination()
+            // console.log("going")
+            progress = await this.doQueue() || await this.solveByElimination()
         }
 
         if (this.status == Status.IN_PROGRESS){
             console.log("Done all logical steps")
             if (this.depth < 2){
-                this.solveByGuess()
+                let dummy = await this.solveByGuess()
             }
         }
 
@@ -364,7 +350,7 @@ class Grid {
     }
 }
 
-function main(){
+async function main(){
     let evilNumbers = [
         [0,0,0,5,0,8,0,2,0],
         [0,8,0,6,0,0,0,0,9],
@@ -376,8 +362,46 @@ function main(){
         [0,5,4,0,0,0,0,0,0],
         [6,0,3,0,0,2,0,0,8]
     ]
+    let specNumbers = [
+        [0,0,0,4,0,0,0,0,2],
+        [0,0,3,0,5,0,4,0,0],
+        [0,2,0,6,0,0,0,9,0],
+        [1,0,7,0,0,0,0,0,0],
+        [0,8,0,0,0,0,0,2,0],
+        [0,0,0,0,0,0,9,0,5],
+        [0,3,0,0,0,8,0,1,0],
+        [0,0,2,0,1,0,5,0,0],
+        [4,0,0,0,0,3,0,0,0]
+    ]
+    let easyNumbers = [
+        [8,0,0,3,7,0,0,6,0],
+        [0,9,4,0,2,0,0,0,0],
+        [0,7,3,0,8,6,0,0,0],
+        [0,0,0,8,1,4,0,0,5],
+        [4,2,0,9,0,0,1,0,0],
+        [7,1,8,0,0,2,3,0,4],
+        [0,4,0,7,9,0,0,2,8],
+        [5,0,2,1,0,0,0,0,0],
+        [0,8,0,0,4,5,0,1,0]
+    ]
+    let ctcNumbers = [
+        [1,0,0,4,0,0,7,0,0],
+        [0,2,0,0,5,0,0,8,0],
+        [0,0,3,0,0,6,0,0,9],
+        [0,1,0,0,4,0,0,7,0],
+        [0,0,2,0,0,5,0,0,8],
+        [9,0,0,3,0,0,6,0,0],
+        [7,0,0,0,0,8,0,0,2],
+        [8,0,0,2,0,0,9,0,0],
+        [0,9,0,0,7,0,0,1,0]
+    ]
     let mainGrid = new Grid(9,3,3)
     mainGrid.load(evilNumbers)
-    mainGrid.solve()
-    console.log(mainGrid.getGrid())
+    var t0 = performance.now()
+    let result = await mainGrid.solve()
+    var t1 = performance.now()
+    console.log("Call to doSomething took " + (t1 - t0) + " milliseconds.")
+    // console.log(mainGrid)
+    // console.log(result)
+    return mainGrid
 }
