@@ -3,6 +3,7 @@ import numpy as np
 import math
 import sys
 import pytesseract
+import re
 
 
 cellSize = 56
@@ -16,7 +17,7 @@ def focusGrid(ogimg):
 
     ogimg = cv2.resize(ogimg,(0,0),fx=r,fy=r)
     img = cv2.cvtColor(ogimg, cv2.COLOR_BGR2GRAY)
-    img = cv2.addWeighted(img, 1.5, np.zeros(img.shape, img.dtype), 0, 0)
+    # img = cv2.addWeighted(img, 1.5, np.zeros(img.shape, img.dtype), 0, 0)
 
     img = cv2.adaptiveThreshold(img,255,cv2.ADAPTIVE_THRESH_MEAN_C,
             cv2.THRESH_BINARY,25,25)
@@ -110,8 +111,10 @@ def rearrangeCorners(corners,width,height):
     return np.array([tl,bl]+corners)
 
 def removeBlackBorder(img,tol=0):
-    mask = img>tol
-    return img[np.ix_(mask.any(1),mask.any(0))]
+    # mask = img>tol
+    # return img[np.ix_(mask.any(1),mask.any(0))]
+
+    return img
 
 def highlightDigit(cell):
     if cell is None:
@@ -119,9 +122,9 @@ def highlightDigit(cell):
 
     img = cv2.cvtColor(cell,cv2.COLOR_GRAY2RGB)
     # gray = cv2.cvtColor(cell, cv2.COLOR_BGR2GRAY)
-    gray = cv2.fastNlMeansDenoising(cell,None,50,5,5)
-    gray = cv2.bitwise_not(gray)
-    gray = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY)[1]
+    # gray = cv2.fastNlMeansDenoising(cell,None,50,5,5)
+    gray = cv2.bitwise_not(cell)
+    # gray = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY)[1]
 
     # cv2.imshow("gray",gray)
     # cv2.waitKey(0)
@@ -131,9 +134,11 @@ def highlightDigit(cell):
     output = cv2.connectedComponentsWithStats(gray, 8, cv2.CV_32S)
     labels = output[1]
     stats = output[2]
+    # print(stats)
     sizes = stats[1:, -1]
     if len(output[2]) <= 1:
         # print("Huh")
+        # return cell
         return None
     
     largest_label = 1 + np.argmax(output[2][1:, -1])
@@ -152,13 +157,18 @@ def highlightDigit(cell):
     tX = cX - bX
     tY = cY - bY
 
-    if (abs(tX) + abs(tY) > 15) or (w*h > 0.9 * width * height):
+    if (abs(tX) + abs(tY) > 10) or (w*h > 0.5 * width * height):
         # print("No central blob")
+        # return cell
         return None
 
-    img[labels != largest_label] = [255,255,255]
+    # print(abs(tX) + abs(tY),w,h)
+
+    # img[labels != largest_label] = [255,255,255]
 
     img = img[y:y+h,x:x+w]
+    # cv2.imshow("img",img)
+    # cv2.waitKey(0)
     return img
 
 def highlightCells(cells):
@@ -244,16 +254,19 @@ def getDigits(cells):
     if len(text) == 0:
         return None
 
-    text = text[0].replace(" ","")
-    if len(text) != len(cellsWithDigits) or not text.isdigit():
+    text = "".join(re.findall('\d+', text[0]))
+    # print(text)
+    if len(text) != len(cellsWithDigits) and not text.isdigit():
         return None
-
+    # print(len(text),len(cellsWithDigits))
+    print(text)
     grid = []
     c = 0
     for i in range(0,len(cells)):
         row = []
         for j in range(0, len(cells[i])):
             if cells[i][j] is not None:
+                # print(i,j,c)
                 row.append(int(text[c]))
                 c += 1
             else:
@@ -273,11 +286,10 @@ def extractGrid(img):
         print("Failed")
         return None
 
-    cv2.imshow("clean",clean)
-    cv2.waitKey(0)
+    # cv2.imshow("clean",clean)
+    # cv2.waitKey(0)
 
     cells = splitUp(clean)
-
     cells = highlightCells(cells)
 
     # printLocations(cells)

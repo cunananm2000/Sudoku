@@ -31,7 +31,7 @@ class Grid {
         }
     }
 
-    load(sampleGrid){
+    async load(sampleGrid){
         if (sampleGrid.length != this.size){
             return false
         }
@@ -324,7 +324,7 @@ class Grid {
         }
 
         if (this.status == Status.IN_PROGRESS){
-            console.log("Done all logical steps")
+            // console.log("Done all logical steps")
             if (this.depth < 2){
                 let dummy = await this.solveByGuess()
             }
@@ -396,7 +396,7 @@ async function main(){
         [0,9,0,0,7,0,0,1,0]
     ]
     let mainGrid = new Grid(9,3,3)
-    mainGrid.load(evilNumbers)
+    await mainGrid.load(evilNumbers)
     var t0 = performance.now()
     let result = await mainGrid.solve()
     var t1 = performance.now()

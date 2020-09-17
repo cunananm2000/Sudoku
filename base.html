@@ -1,6 +1,26 @@
 <!DOCTYPE html>
 <head>
+    <script src='https://unpkg.com/tesseract.js@v2.1.0/dist/tesseract.min.js'></script>
+    <script src='opencv.js'></script>
     <script src='newSolver.js'></script>
+    <script src='sudokuSplitter.js'></script>
 </head>
 <body>
+    <img id="sudokuPic" style='max-width:500px; max-height:500px'>
+    <input type="file" id='fileInput'>
+    <canvas id='output'></canvas>
 </body>
+
+<script>
+    let imgInput = document.getElementById('sudokuPic')
+    // imgInput.setAttribute
+    let fileInput = document.getElementById('fileInput')
+
+    fileInput.addEventListener('change', (e) => {
+        imgInput.src = URL.createObjectURL(e.target.files[0])
+    }, false)
+
+    imgInput.onload = function() {
+        solvePic(cv.imread(imgInput))
+    }
+</script>
