@@ -325,7 +325,7 @@ class Grid {
 
         if (this.status == Status.IN_PROGRESS){
             // console.log("Done all logical steps")
-            if (this.depth < 2){
+            if (this.depth < 3){
                 let dummy = await this.solveByGuess()
             }
         }
@@ -395,13 +395,46 @@ async function main(){
         [8,0,0,2,0,0,9,0,0],
         [0,9,0,0,7,0,0,1,0]
     ]
+    let ctc2Numbers = [
+        [0,0,0,0,0,0,0,1,2],
+        [0,0,0,0,0,0,3,4,5],
+        [0,0,0,0,0,3,6,7,0],
+        [0,0,0,0,8,1,5,0,0],
+        [0,0,0,7,5,4,0,0,0],
+        [0,0,4,2,3,0,0,0,0],
+        [0,6,7,9,0,0,0,0,0],
+        [3,1,2,0,0,0,0,0,0],
+        [8,5,0,0,0,0,0,0,0]
+    ]
+    let exp2Numbers = [
+        [8,0,0,0,0,0,0,0,0],
+        [0,0,3,6,0,0,0,0,0],
+        [0,7,0,0,9,0,2,0,0],
+        [0,5,0,0,0,7,0,0,0],
+        [0,0,0,0,4,5,7,0,0],
+        [0,0,0,1,0,0,0,3,0],
+        [0,0,1,0,0,0,0,6,8],
+        [0,0,8,5,0,0,0,1,0],
+        [0,9,0,0,0,0,4,0,0],
+    ]
+    let worstNumbers = [
+        [0,0,0,8,0,1,0,0,0],
+        [0,0,0,0,0,0,4,3,0],
+        [5,0,0,0,0,0,0,0,0],
+        [0,0,0,0,7,0,8,0,0],
+        [0,0,0,0,0,0,1,0,0],
+        [0,2,0,0,3,0,0,0,0],
+        [6,0,0,0,0,0,0,7,5],
+        [0,0,3,4,0,0,0,0,0],
+        [0,0,0,2,0,0,6,0,0]
+    ]
     let mainGrid = new Grid(9,3,3)
-    await mainGrid.load(evilNumbers)
+    await mainGrid.load(ctc2Numbers)
     var t0 = performance.now()
     let result = await mainGrid.solve()
     var t1 = performance.now()
-    console.log("Call to doSomething took " + (t1 - t0) + " milliseconds.")
-    // console.log(mainGrid)
+    // console.log("Took " + (t1 - t0) + " milliseconds.")
+    // console.log(mainGrid.getGrid())
     // console.log(result)
-    return mainGrid
+    // return mainGrid.getGrid()
 }

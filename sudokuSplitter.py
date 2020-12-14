@@ -256,7 +256,7 @@ def getDigits(cells):
 
     text = "".join(re.findall('\d+', text[0]))
     # print(text)
-    if len(text) != len(cellsWithDigits) and not text.isdigit():
+    if len(text) != len(cellsWithDigits) or not text.isdigit():
         return None
     # print(len(text),len(cellsWithDigits))
     print(text)

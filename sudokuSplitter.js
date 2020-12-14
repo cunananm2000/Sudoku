@@ -306,12 +306,6 @@ async function solvePic(img){
 
     let result  = await mainGrid.solve()
 
-    console.log(mainGrid.getGrid())
-    // console.log(cells)
-
-    // console.log(cells)
-
-    // cv.imshow("output",clean)
-
-
+    // console.log(mainGrid.getGrid())
+    return mainGrid
 }

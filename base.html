@@ -1,17 +1,189 @@
 <!DOCTYPE html>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-giJF6kkoqNQ00vy+HMDP7azOuL0xtbfIcaT9wjKHr8RbDVddVHyTfAAsrekwKmP1" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/js/bootstrap.bundle.min.js" integrity="sha384-ygbV9kiqUc6oa4msXn9868pTtWMgiQaeYH7/t7LECLbyPA2x65Kgf80OJFdroafW" crossorigin="anonymous"></script>
+<script src='https://unpkg.com/tesseract.js@v2.1.0/dist/tesseract.min.js'></script>
+<script src='opencv.js'></script>
+<script src='newSolver.js'></script>
+<script src='sudokuSplitter.js'></script>
+<style>
+    #navbar {
+        top: 0%;
+        left: 0%;
+        position: absolute;
+        width: 100%;
+        height: 10%;
+        background-color: blue;
+    }
+
+    #content {
+        width: 100%;
+        background-color: black;
+        height: 100%;
+        position: fixed;
+    }
+
+    #leftScreen, #rightScreen {
+        width: 40%;
+        height: 100%;
+        /* background-color: green; */
+        display: inline-block;
+    }
+
+    #divider {
+        width: 20%;
+        height: 100%;
+        /* background-color: purple; */
+        display: inline-block;
+        border-left: 1px solid grey;
+        border-right: 1px solid grey;
+    }
+
+    #leftScreen {
+        float: left;
+        position: relative;
+    }
+
+    #rightScreen {
+        float: right;
+    }
+
+    #arrow {
+        font-size: 150px;
+        width: 1em;
+        margin-left: auto;
+        margin-right: auto;
+        vertical-align: middle;
+        position: relative;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+
+    #sudokuPic {
+        max-width: 70%; 
+        max-height: 70%;
+        margin-left: auto;
+        margin-right: auto;
+        /* width: 70%;
+        transform: translate(20%); */
+        display: block;
+        margin-top: 10%;
+        box-shadow: 0px 0px 5px 5px white;
+    }
+
+    #maskFileInput {
+        /* width: 50%; */
+        /* transform: translate(50%); */
+        position: absolute;
+        bottom: 15%;
+        left: 20%;
+    }
+
+    #solveBtn {
+        /* width: 50%; */
+        /* transform: translate(50%); */
+        position: absolute;
+        bottom: 15%;
+        right: 20%;
+    }
+
+    #finalGrid {
+        margin-left: auto;
+        margin-right: auto;
+        /* margin-top: auto;
+        margin-bottom: auto; */
+        transform: translateY(10%);
+        color: white;
+    }
+</style>
 <head>
-    <script src='https://unpkg.com/tesseract.js@v2.1.0/dist/tesseract.min.js'></script>
-    <script src='opencv.js'></script>
-    <script src='newSolver.js'></script>
-    <script src='sudokuSplitter.js'></script>
 </head>
 <body>
-    <img id="sudokuPic" style='max-width:500px; max-height:500px'>
-    <input type="file" id='fileInput'>
-    <canvas id='output'></canvas>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container-fluid">
+          <a class="navbar-brand" href="#">Sudoku solver</a>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+              <li class="nav-item">
+                <a class="nav-link active" aria-current="page" href="#">Home</a>
+              </li>
+          </div>
+        </div>
+      </nav>
+
+      <div id="content">
+          <div id="leftScreen">
+            <img id="sudokuPic">
+            <!-- <input type="file" id='fileInput'> -->
+            <input type="file" id="fileInput" style="display: none;" />
+            <input id="maskFileInput" type="button" value="Select pic" onclick="document.getElementById('fileInput').click()" class="btn btn-primary" />
+
+            <input id="solveBtn" type="button" value="Solve" class="btn btn-primary"" />
+            <canvas id='output' hidden></canvas>
+          </div>
+          <div id="divider">
+            <p id="arrow">
+                &#10140;
+            </p>
+          </div>
+          <div id="rightScreen">
+
+          </div>
+      </div>
 </body>
 
 <script>
+    function fillGrid(grid=null) {
+        let rightScreen = document.getElementById("rightScreen")
+        while (rightScreen.firstChild){
+            rightScreen.removeChild(rightScreen.lastChild)
+        }
+
+        let finalGrid = document.createElement("table")
+        finalGrid.id = "finalGrid"
+        for (let i = 0; i < 9; i++){
+            let row = document.createElement("tr")
+            for (let j = 0; j < 9; j++){
+                let cell = document.createElement("td")
+                cell.style.height = '60px'
+                cell.style.width = '60px'
+                cell.style.border = '1px solid white'
+                cell.style.textAlign = 'center'
+                cell.style.verticalAlign = 'middle'
+                cell.style.fontFamily = "Courier New"
+                cell.style.fontSize = '2em'
+                console.log(i == 5)
+                if (i == 0) {
+                    cell.style.borderTop = '4px solid white'
+                } else if (i == 8) {
+                    cell.style.borderBottom = '4px solid white'
+                } else if (i % 3 == 2){
+                    cell.style.borderBottom = '3px solid white'
+                } else if (i % 3 == 0){
+                    cell.style.borderTop = '3px solid white'
+                }
+                if (j == 0){
+                    cell.style.borderLeft = '4px solid white'
+                } else if (j == 8){
+                    cell.style.borderRight = '4px solid white'
+                } else if (j % 3 == 2){
+                    cell.style.borderRight = '3px solid white'
+                } else if (j % 3 == 0){
+                    cell.style.borderLeft = '3px solid white'
+                }
+                cell.textContent = grid == null ? '-' : grid[i][j]
+                row.appendChild(cell)
+            }
+            finalGrid.appendChild(row)
+        }
+        rightScreen.appendChild(finalGrid)
+    }
+
+    fillGrid(null)
+
+
     let imgInput = document.getElementById('sudokuPic')
     // imgInput.setAttribute
     let fileInput = document.getElementById('fileInput')
@@ -20,7 +192,16 @@
         imgInput.src = URL.createObjectURL(e.target.files[0])
     }, false)
 
-    imgInput.onload = function() {
-        solvePic(cv.imread(imgInput))
-    }
+    // let finalGrid = document.getElementById("rightScreen")
+
+    let solveBtn = document.getElementById("solveBtn")
+    solveBtn.addEventListener('click', async function () {
+        var t0 = performance.now()
+        let result = await solvePic(cv.imread(imgInput))
+        var t1 = performance.now()
+        console.log("Took " + (t1 - t0) + " milliseconds.")
+        let resultGrid = result.getGrid()
+        console.log(resultGrid)
+        fillGrid(resultGrid)
+    })
 </script>
