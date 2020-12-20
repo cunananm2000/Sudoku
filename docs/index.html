@@ -34,8 +34,8 @@
         height: 100%;
         /* background-color: purple; */
         display: inline-block;
-        border-left: 1px solid grey;
-        border-right: 1px solid grey;
+        /* border-left: 1px solid grey;
+        border-right: 1px solid grey; */
     }
 
     #leftScreen {
@@ -67,23 +67,40 @@
         transform: translate(20%); */
         display: block;
         margin-top: 10%;
-        box-shadow: 0px 0px 5px 5px white;
     }
 
     #maskFileInput {
-        /* width: 50%; */
-        /* transform: translate(50%); */
-        position: absolute;
+        /* position: absolute;
         bottom: 15%;
-        left: 20%;
+        left: 20%; */
+
+        /* position: absolute;
+        transform: translate(-50%);
+        bottom: 50%;
+        left: 50%; */
+
+        left: 50%;
+        top: 5%;
+        transform: translateX(-50%);
+        position: relative;
+    }
+
+    #selectPicBtn {
+        position: absolute;
+        transform: translate(-50%);
+        bottom: 50%;
+        left: 50%;
+        /* transition:all 500ms ease-in-out; */
     }
 
     #solveBtn {
         /* width: 50%; */
         /* transform: translate(50%); */
         position: absolute;
-        bottom: 15%;
+        /* transform: translate(-50%); */
+        bottom: 13%;
         right: 20%;
+        display: none;
     }
 
     #finalGrid {
@@ -94,10 +111,64 @@
         transform: translateY(10%);
         color: white;
     }
+
+    #modalOverlay {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        z-index: 1;
+        background-color: rgba(0, 0, 0, 0.8);
+        top: -100%;
+        transition:all 500ms ease-in-out;
+    }
+
+    #modalWindow {
+        position: absolute;
+        width: 50%;
+        height: 55%;
+        z-index: 2;
+        background-color: white;
+        top: -100%;
+        left: 50%;
+        transform: translate(-50%,-50%);
+        transition:all 700ms ease-in-out;
+        padding: 20px;
+        border-radius: 5px;
+        /* box-shadow: ; */
+    }
+
+    #closeModalBtn {
+        top: 10px;
+        right: 10px;
+        position: absolute;
+    }
+
+    .exampleImg {
+        width: 30.5%;
+        margin: 1%;
+    }
+
+    .exampleImg:hover {
+        box-shadow: 0px 0px 5px 5px lightblue;
+    }
 </style>
 <head>
 </head>
 <body>
+    <div id="modalOverlay"></div>
+    <div id="modalWindow">
+        <!-- <input type="button" value="Upload picture" class="btn btn-primary"/> -->
+        <input id="maskFileInput" type="button" value="Upload picture" onclick="document.getElementById('fileInput').click()" class="btn btn-primary" />
+        <!-- <button id="closeModalBtn" type="button" class="close" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button> -->
+        <button id="closeModalBtn" type="button" class="btn-close" aria-label="Close"></button>
+        <p style="margin-top: 20px; width: 100%; transform: translate(25%);">- or select an example photo from below -</p>
+        <img class="exampleImg" src="sudoku1.png">
+        <img class="exampleImg" src="sudoku2.png">
+        <img class="exampleImg" src="sudoku3.png">
+    </div>
+
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <div class="container-fluid">
           <a class="navbar-brand" href="#">Sudoku solver</a>
@@ -113,14 +184,18 @@
         </div>
       </nav>
 
+      
+
       <div id="content">
           <div id="leftScreen">
             <img id="sudokuPic">
             <!-- <input type="file" id='fileInput'> -->
             <input type="file" id="fileInput" style="display: none;" />
-            <input id="maskFileInput" type="button" value="Select pic" onclick="document.getElementById('fileInput').click()" class="btn btn-primary" />
+            
+            <input id="selectPicBtn" type="button" value="Select picture" class="btn btn-primary" />
+            <!--  -->
 
-            <input id="solveBtn" type="button" value="Solve" class="btn btn-primary"" />
+            <input id="solveBtn" type="button" value="     Solve     " class="btn btn-primary"" />
             <canvas id='output' hidden></canvas>
           </div>
           <div id="divider">
@@ -183,25 +258,82 @@
 
     fillGrid(null)
 
+    let exampleImgs = document.getElementsByClassName('exampleImg')
+    for (let img of exampleImgs) {
+        img.setAttribute('crossOrigin', '')
+        img.addEventListener('click', e => {
+            imgInput.src = img.src
+            // img.crossOrigin = "Anonymous";
+            closeModal()
+            selectPicBtn.style.bottom = '13%'
+            selectPicBtn.style.left = '30%'
+            solveBtn.style.display = 'block'
+            imgInput.style.boxShadow = '0px 0px 5px 5px white'
+            solveBtn.value = '     Solve     '
+            fillGrid()
+        })
+    }
+
+    let modalOverlay = document.getElementById('modalOverlay')
+    let modalWindow = document.getElementById('modalWindow')
+
+    let selectPicBtn = document.getElementById('selectPicBtn')
+    selectPicBtn.addEventListener('click', e => {
+        openModal()
+    })
+
+    let closeModalBtn = document.getElementById('closeModalBtn')
+    closeModalBtn.addEventListener('click', e => {
+        closeModal()
+    })
+
 
     let imgInput = document.getElementById('sudokuPic')
-    // imgInput.setAttribute
+    // // imgInput.setAttribute
     let fileInput = document.getElementById('fileInput')
+    let solveBtn = document.getElementById("solveBtn")
+
+
 
     fileInput.addEventListener('change', (e) => {
         imgInput.src = URL.createObjectURL(e.target.files[0])
+        closeModal()
+        selectPicBtn.style.bottom = '13%'
+        selectPicBtn.style.left = '30%'
+        solveBtn.style.display = 'block'
+        imgInput.style.boxShadow = '0px 0px 5px 5px white'
+        solveBtn.value = '     Solve     '
+        fillGrid()
     }, false)
 
-    // let finalGrid = document.getElementById("rightScreen")
+    // // let finalGrid = document.getElementById("rightScreen")
 
-    let solveBtn = document.getElementById("solveBtn")
+    
     solveBtn.addEventListener('click', async function () {
+        // solveBtn.style.backgroundColor = 'red'
+        solveBtn.value = '  Solving...  '
         var t0 = performance.now()
         let result = await solvePic(cv.imread(imgInput))
         var t1 = performance.now()
         console.log("Took " + (t1 - t0) + " milliseconds.")
+        let status = result.getStatus()
         let resultGrid = result.getGrid()
+        console.log(status)
         console.log(resultGrid)
+        // solveBtn.style.backgroundColor = 'blue'
+        solveBtn.value = '    Solved!    '
         fillGrid(resultGrid)
     })
+
+    function closeModal() {
+        modalOverlay.style.top = '-100%'
+        modalWindow.style.top = '-100%'
+    }
+
+    function openModal() {
+        modalOverlay.style.top = '0%'
+        modalWindow.style.top = '50%'
+    }
+
+
 </script>

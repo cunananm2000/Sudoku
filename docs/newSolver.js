@@ -348,6 +348,10 @@ class Grid {
         }
         return ret
     }
+
+    getStatus() {
+        return this.status
+    }
 }
 
 async function main(){
